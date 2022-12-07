@@ -38,8 +38,6 @@ drop_na(votes, strengthofbipartisanship)%>%
 ```
 
 ```{r}
-citizens<- read_dta("Data_observational.dta")
-
 head(da08475.0001)
 anes92_12<- da08475.0001%>%
   filter(VCF0004 > 1990)
