@@ -1,0 +1,222 @@
+---
+title: "Congressional Polarization Project"
+author: "Dalia Habiby"
+date: "2022-12-06"
+output: pdf_document
+---
+
+```{r }
+suppressMessages(library(tidyr))
+suppressMessages(library(dplyr))
+suppressMessages(library(ggplot2))
+suppressMessages(library(tidyverse))
+suppressMessages(library(haven))
+```
+
+```{r}
+votes<- read_dta("Important Congressional Votes, 1991-2020.dta")
+votes%>%
+  select(year, democraticayes, democraticnays, republicanayes, republicannays, strengthofbipartisanship, strengthofconsensus, introducedbydemocrat, strongpolarization)%>%
+  summary()
+
+ggplot(data=votes)+
+  geom_histogram(aes( x= strengthofbipartisanship))
+
+votes<-votes%>%
+  filter(introducedbydemocrat!=2)
+
+votes$introducedbydemocrat<- as.factor(votes$introducedbydemocrat)
+
+drop_na(votes, strengthofbipartisanship)%>%
+  group_by(year)%>%
+  summarize(mean = mean(strengthofbipartisanship))%>%
+  ggplot()+
+  geom_line(aes(x= as.factor(year), y= mean), group= 1)+
+  geom_point(aes(x=as.factor(year), y=mean))+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  xlab("Year")+ ylab("Average Strength of Bipartisanship")
+```
+
+```{r}
+citizens<- read_dta("Data_observational.dta")
+
+head(da08475.0001)
+anes92_12<- da08475.0001%>%
+  filter(VCF0004 > 1990)
+Rftd92_12<- anes92_12%>%
+  filter(is.na(VCF0218)== FALSE)%>%
+  filter(VCF0301 == "(5) 5. Independent - Republican"| VCF0301 == "(6) 6. Weak Republican" | VCF0301 == "(7) 7. Strong Republican")%>%
+  group_by(VCF0004)%>%
+  summarise(mean = mean(VCF0218))%>%
+  rename("year" =VCF0004)
+  
+Dftr92_12<- anes92_12%>%
+  filter(is.na(VCF0224)== FALSE)%>%
+  filter(VCF0301 == "(1) 1. Strong Democrat"| VCF0301 == "(2) 2. Weak Democrat" | VCF0301 == "(3) 3. Independent - Democrat")%>%
+  group_by(VCF0004)%>%
+  summarise(mean = mean(VCF0224))%>%
+  rename("year" =VCF0004)
+
+anes16<- da36824.0001
+
+
+Rftd16<- anes16%>%
+  filter(is.na(V161095)== FALSE)%>%
+  filter(V162279 == "(5) 5. Republican")%>%
+  summarise(mean = mean(V161095))
+Rftd16$year<- 2016
+
+Dftr16<- anes16%>%
+  filter(is.na(V161096)== FALSE)%>%
+  filter(V162279 == "(1) 1. Democratic")%>%
+  summarise(mean = mean(V161096))
+Dftr16$year<- 2016
+
+anes20<- da38034.0001
+
+Rftd20<- anes20%>%
+  filter(is.na(V201156)== FALSE)%>%
+  filter(V202429 == "(5) 5. Republican")%>%
+  summarise(mean = mean(V201156))
+Rftd20$year<- 2020
+
+Dftr20<- anes20%>%
+  filter(is.na(V201157)== FALSE)%>%
+  filter(V202429 == "(1) 1. Democratic")%>%
+  summarise(mean = mean(V201157))
+Dftr20$year<- 2020
+
+
+RD1620<- rbind(Rftd16, Rftd20)
+
+RthermD<- rbind(Rftd92_12, RD1620)
+RthermD<- RthermD%>%
+  rename(RepFeelingThermDem = mean)
+
+DR1620<- rbind(Dftr16, Dftr20)
+DthermR<- rbind(Dftr92_12, DR1620)
+DthermR<- DthermR%>%
+  rename(DemFeelingThermRep = mean)
+
+```
+
+```{r}
+
+RR92_12<- anes92_12%>%
+  filter(is.na(VCF0224)== FALSE)%>%
+  filter(VCF0301 == "(5) 5. Independent - Republican"| VCF0301 == "(6) 6. Weak Republican" | VCF0301 == "(7) 7. Strong Republican")%>%
+  group_by(VCF0004)%>%
+  summarise(mean = mean(VCF0224))%>%
+  rename("year" =VCF0004)
+
+RR16<-anes16%>%
+  filter(is.na(V161096)== FALSE)%>%
+  filter(V162279 == "(5) 5. Republican")%>%
+  summarise(mean = mean(V161096))
+RR16$year<- 2016
+
+RR20<- anes20%>%
+  filter(is.na(V201157)== FALSE)%>%
+  filter(V202429 == "(5) 5. Republican")%>%
+  summarise(mean = mean(V201157))
+RR20$year<- 2020
+
+RR1620<- rbind(RR16, RR20)
+
+RthermR<- rbind(RR92_12, RR1620)
+RthermR<- RthermR%>%
+  rename(RepFeelingThermRep = mean)
+```
+
+```{r}
+DD92_12<- anes92_12%>%
+  filter(is.na(VCF0218)== FALSE)%>%
+  filter(VCF0301 == "(1) 1. Strong Democrat"| VCF0301 == "(2) 2. Weak Democrat" | VCF0301 == "(3) 3. Independent - Democrat")%>%
+  group_by(VCF0004)%>%
+  summarise(mean = mean(VCF0218))%>%
+  rename("year" =VCF0004)
+
+DD16<- anes16%>%
+  filter(is.na(V161095)== FALSE)%>%
+  filter(V162279 == "(1) 1. Democratic")%>%
+  summarise(mean = mean(V161095))
+DD16$year<- 2016
+
+
+DD20<- anes20%>%
+  filter(is.na(V201156)== FALSE)%>%
+  filter(V202429 == "(1) 1. Democratic")%>%
+  summarise(mean = mean(V201156))
+DD20$year<- 2020
+
+DD1620<- rbind(DD16, DD20)
+
+DthermD<- rbind(DD92_12, DD1620)
+DthermD<- DthermD%>%
+  rename(DemFeelingThermDem = mean)
+```
+
+All feeling thermometer observations
+```{r}
+feelingtherm<- cbind(RthermD, DthermR, RthermR, DthermD)[-c(3,5,7)]
+```
+
+Individual feeling thermometer plots
+```{r}
+ggplot(data=feelingtherm)+
+  geom_line(aes(x=as.factor(year), y=RepFeelingThermDem), group =1)+
+  geom_point(aes(x=as.factor(year), y=RepFeelingThermDem))+
+  ylim(10,50)
+
+
+ggplot(data=feelingtherm)+
+  geom_line(aes(x=as.factor(year), y=DemFeelingThermRep), group =1)+
+  geom_point(aes(x=as.factor(year), y=DemFeelingThermRep))+
+  ylim(10,50)
+
+
+ggplot(data=feelingtherm)+
+  geom_line(aes(x=as.factor(year), y=RepFeelingThermRep), group =1)+
+  geom_point(aes(x=as.factor(year), y=RepFeelingThermRep))+
+  ylim(50,90)
+
+
+ggplot(data=feelingtherm)+
+  geom_line(aes(x=as.factor(year), y=DemFeelingThermDem), group =1)+
+  geom_point(aes(x=as.factor(year), y=DemFeelingThermDem))+
+  ylim(50,90)
+```
+Comparison graphs
+
+```{r}
+ggplot(data=feelingtherm)+
+  geom_line(aes(x=as.factor(year), y=RepFeelingThermDem), group =1, color = "blue")+
+  geom_point(aes(x=as.factor(year), y=RepFeelingThermDem))+
+  geom_line(aes(x=as.factor(year), y=RepFeelingThermRep), group =1, color = "red")+
+  geom_point(aes(x=as.factor(year), y=RepFeelingThermRep))+
+  ylab("Feeling Thermometer")+ xlab("Year") + ggtitle("Republican Citizens Feeling Thermometer on Both Parties 1992-2020")
+```
+```{r}
+ggplot(data=feelingtherm)+
+  geom_line(aes(x=as.factor(year), y=DemFeelingThermDem), group =1, color = "blue")+
+  geom_point(aes(x=as.factor(year), y=DemFeelingThermDem))+
+  geom_line(aes(x=as.factor(year), y=DemFeelingThermRep), group =1, color = "red")+
+  geom_point(aes(x=as.factor(year), y=DemFeelingThermRep))+
+  ylab("Feeling Thermometer")+ xlab("Year") + ggtitle("Democrat Citizens Feeling Thermometer on Both Parties 1992-2020")
+```
+
+
+
+```{r}
+strengthbip<- votes%>%
+  filter(is.na(strengthofbipartisanship) == FALSE)%>%
+  group_by(year)%>%
+  summarise(avgbip = 100*mean(strengthofbipartisanship))
+
+DR<- left_join(DthermR, strengthbip, by = "year")
+RD<- left_join(RthermD, strengthbip, by = "year")
+
+summary(lm(mean~ avgbip, data = DR))
+summary(lm(mean~ avgbip, data = RD))
+```
+
