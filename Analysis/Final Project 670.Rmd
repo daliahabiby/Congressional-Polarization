@@ -14,9 +14,9 @@ suppressMessages(library(haven))
 ```
 
 ```{r}
-votes<- read_dta("Important Congressional Votes, 1991-2020.dta")
+votes<- read_dta("../Data/Important Congressional Votes, 1991-2010.dta")
 votes%>%
-  select(year, democraticayes, democraticnays, republicanayes, republicannays, strengthofbipartisanship, strengthofconsensus, introducedbydemocrat, strongpolarization)%>%
+  dplyr::select(year, democraticayes, democraticnays, republicanayes, republicannays, strengthofbipartisanship, strengthofconsensus, introducedbydemocrat, strongpolarization)%>%
   summary()
 
 ggplot(data=votes)+
@@ -38,7 +38,7 @@ drop_na(votes, strengthofbipartisanship)%>%
 ```
 
 ```{r}
-anes<- read_dta("../Data/ANES_1948_2012.dta")
+anes<- read_dta("../../ANES_1948_2012.dta")
 
 anes92_12<- anes%>%
   filter(VCF0004 > 1990)
@@ -190,21 +190,34 @@ Comparison graphs
 
 ```{r}
 ggplot(data=feelingtherm)+
-  geom_line(aes(x=as.factor(year), y=RepFeelingThermDem), group =1, color = "blue")+
-  geom_point(aes(x=as.factor(year), y=RepFeelingThermDem))+
-  geom_line(aes(x=as.factor(year), y=RepFeelingThermRep), group =1, color = "red")+
-  geom_point(aes(x=as.factor(year), y=RepFeelingThermRep))+
+  geom_line(aes(x=year, y=RepFeelingThermDem), color = "blue")+
+  geom_point(aes(x=year, y=RepFeelingThermDem))+
+  geom_line(aes(x=year, y=RepFeelingThermRep), color = "red")+
+  geom_point(aes(x=year, y=RepFeelingThermRep))+
   ylab("Feeling Thermometer")+ xlab("Year") + ggtitle("Republican Citizens Feeling Thermometer on Both Parties 1992-2020")
 ```
 ```{r}
 ggplot(data=feelingtherm)+
-  geom_line(aes(x=as.factor(year), y=DemFeelingThermDem), group =1, color = "blue")+
-  geom_point(aes(x=as.factor(year), y=DemFeelingThermDem))+
-  geom_line(aes(x=as.factor(year), y=DemFeelingThermRep), group =1, color = "red")+
-  geom_point(aes(x=as.factor(year), y=DemFeelingThermRep))+
+  geom_line(aes(x=year, y=DemFeelingThermDem), color = "blue")+
+  geom_point(aes(x=year, y=DemFeelingThermDem))+
+  geom_line(aes(x=year, y=DemFeelingThermRep), color = "red")+
+  geom_point(aes(x=year, y=DemFeelingThermRep))+
   ylab("Feeling Thermometer")+ xlab("Year") + ggtitle("Democrat Citizens Feeling Thermometer on Both Parties 1992-2020")
 ```
 
+```{r}
+ggplot(data=anes92_12)+
+  geom_histogram(aes(x= VCF0301), stat = "count", bins=20)+
+  ggtitle("Party Identification 1992-2012")+
+  xlab("Party Identification (7 point scale)")
+
+ggplot(data=anes16)+
+  geom_histogram(aes(x= V162279))
+
+ggplot(data=anes20)+
+  geom_histogram(aes(x= V202429))
+
+```
 
 
 ```{r}
@@ -218,5 +231,322 @@ RD<- left_join(RthermD, strengthbip, by = "year")
 
 summary(lm(DemFeelingThermRep~ avgbip, data = DR))
 summary(lm(RepFeelingThermDem~ avgbip, data = RD))
+
+ggplot(data= DR, aes(x= avgbip, y=DemFeelingThermRep))+
+  geom_point()+
+  geom_smooth(method = lm, se= FALSE)+
+  xlab("Average Strength of Bipartisanship in Congress")+ ylab("Democrat Citizen Feeling Thermometer on Republican Party")+
+  ggtitle("Correlation Between Bipartisanship and Feeling Thermometer")
+
+ggplot(data= RD, aes(x= avgbip, y=RepFeelingThermDem))+
+  geom_point()+
+  geom_smooth(method = lm, se= FALSE)+
+  xlab("Average Strength of Bipartisanship in Congress")+ ylab("Republican Citizen Feeling Thermometer on Democratic Party")+
+  ggtitle("Correlation Between Bipartisanship and Feeling Thermometer")
+
 ```
+
+
+```{r}
+
+
+```
+
+
+H(p, 1 − p) = 2^(−[p·log2(p)+(1−p)·log2(1−p)]) − 1
+
+```{r}
+binaryent1<- anes16%>%
+  filter(V162279 == 1| V162279 == 5)%>%
+  count(V162279)
+anes16$V162279
+
+binaryent2<- anes20%>%
+  filter(V202429 == 1| V202429 == 5)%>%
+  count(V202429)
+
+cumulent<- anes92_12%>%
+  filter(VCF0301== 1| VCF0301== 2| VCF0301== 3| VCF0301== 4| VCF0301== 5| VCF0301== 6| VCF0301== 7)%>%
+  count(VCF0301)
+
+cumulent<- anes%>%
+  filter(VCF0301== 1| VCF0301== 2| VCF0301== 3| VCF0301== 4| VCF0301== 5| VCF0301== 6| VCF0301== 7)%>%
+  group_by(VCF0004)%>%
+  count(VCF0301)
+
+  
+pt7_16<- anes16%>%
+  filter(V161126== 1| V161126== 2| V161126== 3| V161126== 4| V161126== 5| V161126== 6| V161126== 7)%>%
+  count(V161126)
+
+pt7_20<- anes20%>%
+  filter(V201200== 1| V201200== 2| V201200== 3| V201200== 4| V201200== 5| V201200== 6| V201200== 7)%>%
+  count(V201200)
+
+pt7_16$VCF0004<- rep(2016, nrow(pt7_16))
+names(pt7_16)<- c("VCF0301", "n", "VCF0004") 
+
+pt7_20$VCF0004<- rep(2020, nrow(pt7_20))
+names(pt7_20)<- c("VCF0301", "n", "VCF0004") 
+
+w16<-rbind(cumulent, pt7_16)
+w20<- rbind(w16, pt7_20)
+
+data.frame(n = binaryent1$n +binaryent2$n, party = c("Democrat", "Republican"))
+
+
+df<- cumulent%>%
+    filter(VCF0004== 2012)
+```
+
+```{r}
+# Entropy functions
+
+# Input: a vector of proportions
+entropy <- function (vec) {
+    p <- vec/sum(vec)
+    a <- log2(p)
+    a[a == -Inf] <- 0
+    e <- -1 * sum(p * a)
+    return(e)
+}
+
+# Input: a vector of proportions
+cumEntropy <- function(vec){
+  l <- length(vec)
+  outEntropy <- 0
+  for (i in 1:(l-1)) {
+    doubleEntropy <- entropy(c(sum(vec[1:i]), sum(vec[(i+1):l])))^2
+    outEntropy <- outEntropy + doubleEntropy
+  }
+  return(outEntropy/(l-1))
+}
+
+
+entropy(df$n)
+
+cumEntropy(df$n)
+
+Ec<- vector()
+for (i in 1:31){
+  
+  yr<- unique(w20$VCF0004)[i]
+  
+  df<- w20%>%
+    filter(VCF0004== yr)
+  
+  Ec[i]<- cumEntropy(df$n)
+}
+
+testdf<- w20%>%
+    filter(VCF0004== 2012)
+
+testdf$percent<- testdf$n/sum(testdf$n)
+
+cumEntropy(testdf$percent)
+
+
+Ec<- vector()
+for(i in 1:31){
+  
+  yr<- unique(w20$VCF0004)[i]
+  
+  df<- w20%>%
+    filter(VCF0004== yr)
+  
+  df$percent<- df$n/sum(df$n)
+  
+  Ec[i]<- cumEntropy(df$percent)
+}
+
+
+ggplot()+
+  geom_line(aes(x = unique(w20$VCF0004), y= Ec))+
+  ylim(0.4, 0.8)
+```
+
+
+identity ft
+```{r}
+
+ftgay12d<- anes%>%
+  group_by(VCF0004)%>%
+  filter(is.na(VCF0232)== FALSE)%>%
+  filter(VCF0301 == 1| VCF0301 == 2 | VCF0301 == 3)%>%
+  summarise(mean = mean(VCF0232))%>%
+  rename("year" =VCF0004)
+
+ftgay16d<- anes16%>%
+  filter(is.na(V162103)== FALSE)%>%
+   filter(V162279 == 1)%>%
+  summarise(mean = mean(V162103))%>%
+  mutate("year"= 2016)
+
+ftgay20d<-  anes20%>%
+  filter(is.na(V202166)== FALSE)%>%
+  filter(V202429 == 1)%>%
+  summarise(mean = mean(V202166))%>%
+  mutate("year"= 2020)
+
+ftgayd<- rbind(rbind(ftgay12d, ftgay16d), ftgay20d)
+
+
+ftgay12r<- anes%>%
+  group_by(VCF0004)%>%
+  filter(is.na(VCF0232)== FALSE)%>%
+  filter(VCF0301 == 5| VCF0301 == 6 | VCF0301 == 7)%>%
+  summarise(mean = mean(VCF0232))%>%
+  rename("year" =VCF0004)
+
+ftgay16r<- anes16%>%
+  filter(is.na(V162103)== FALSE)%>%
+  filter(V162279 == 5)%>%
+  summarise(mean = mean(V162103))%>%
+  mutate("year"= 2016)
+
+ftgay20r<-  anes20%>%
+  filter(is.na(V202166)== FALSE)%>%
+  filter(V202429 == 5)%>%
+  summarise(mean = mean(V202166))%>%
+  mutate("year"= 2020)
+
+ftgayr<- rbind(rbind(ftgay12r, ftgay16r), ftgay20r)
+
+ggplot()+
+  geom_line(aes(x = ftgayr$year, y= ftgayr$mean))+
+  geom_line(aes(x = ftgayd$year, y= ftgayd$mean))+
+  ylim(20, 80)
+
+```
+
+```{r}
+ftimm12d<- anes%>%
+  group_by(VCF0004)%>%
+  filter(is.na(VCF0233)== FALSE)%>%
+  filter(VCF0301 == 1| VCF0301 == 2 | VCF0301 == 3)%>%
+  summarise(mean = mean(VCF0233))%>%
+  rename("year" =VCF0004)
+
+ftimm16d<- anes16%>%
+  filter(is.na(V162313)== FALSE)%>%
+  filter(V162279 == 1)%>%
+  summarise(mean = mean(V162313))%>%
+  mutate("year"= 2016)
+
+ftimm20d<-  anes20%>%
+  filter(is.na(V202481)== FALSE)%>%
+  filter(V202429 == 1)%>%
+  summarise(mean = mean(V202481))%>%
+  mutate("year"= 2020)
+
+ftimmd<- rbind(rbind(ftimm12d, ftimm16d), ftimm20d)
+ggplot(data= ftimmd)+
+  geom_line(aes(x = year, y= mean))+
+  ylim(20,80)
+
+
+ftimm12r<- anes%>%
+  group_by(VCF0004)%>%
+  filter(is.na(VCF0233)== FALSE)%>%
+  filter(VCF0301 == 5| VCF0301 == 6| VCF0301 == 7)%>%
+  summarise(mean = mean(VCF0233))%>%
+  rename("year" =VCF0004)
+
+ftimm16r<- anes16%>%
+  filter(is.na(V162313)== FALSE)%>%
+  filter(V162279 == 5)%>%
+  summarise(mean = mean(V162313))%>%
+  mutate("year"= 2016)
+
+ftimm20r<-  anes20%>%
+  filter(is.na(V202481)== FALSE)%>%
+  filter(V202429 == 5)%>%
+  summarise(mean = mean(V202481))%>%
+  mutate("year"= 2020)
+
+ftimmr<- rbind(rbind(ftimm12r, ftimm16r), ftimm20r)
+ggplot(data= ftimmr)+
+  geom_line(aes(x = year, y= mean))+
+  ylim(20,80)
+
+
+ftimm12<- anes%>%
+  group_by(VCF0004)%>%
+  filter(is.na(VCF0233)== FALSE)%>%
+  summarise(mean = mean(VCF0233))%>%
+  rename("year" =VCF0004)
+
+ftimm16<- anes16%>%
+  filter(is.na(V162313)== FALSE)%>%
+  summarise(mean = mean(V162313))%>%
+  mutate("year"= 2016)
+
+ftimm20<-  anes20%>%
+  filter(is.na(V202481)== FALSE)%>%
+  summarise(mean = mean(V202481))%>%
+  mutate("year"= 2020)
+
+ftimm<- rbind(rbind(ftimm12, ftimm16), ftimm20)
+ggplot(data= ftimm)+
+  geom_line(aes(x = year, y= mean))+
+  ylim(20,80)
+```
+
+
+
+```{r}
+gss<- read_dta("../../gss7221_r3.dta")
+gss$liveblks
+gss$race
+
+#5 is strongly oppose
+gss%>%
+  filter(race== 1)%>%
+  filter(is.na(liveblks)== FALSE)%>%
+  group_by(year)%>%
+  count(liveblks)
+
+blkneighbor<- gss%>%
+  filter(is.na(liveblks)== FALSE)%>%
+  group_by(year)%>%
+  count(liveblks)
+
+whtneighbor<- gss%>%
+  filter(is.na(livewhts)== FALSE)%>%
+  group_by(year)%>%
+  count(livewhts)
+  
+
+
+Ecgss<- vector()
+for (i in 1:14){
+  
+  yr<- unique(blkneighbor$year)[i]
+  
+  df<- blkneighbor%>%
+    filter(year== yr)
+  
+  Ecgss[i]<- cumEntropy(df$n)
+}
+
+ggplot()+
+  geom_line(aes(x = unique(blkneighbor$year), y= Ecgss))+
+  ylim(0.1, 0.5)
+
+
+Ecgss2<- vector()
+for (i in 1:9){
+  
+  yr<- unique(whtneighbor$year)[i]
+  
+  df<- whtneighbor%>%
+    filter(year== yr)
+  
+  Ecgss2[i]<- cumEntropy(df$n)
+}
+```
+
+
+
+
 

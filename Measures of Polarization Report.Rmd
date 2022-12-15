@@ -1,51 +1,304 @@
 ---
-title: "Measures of Polarization"
+title: "Measures of Political Polarization"
 author: "Dalia Habiby"
 date: "2022-12-13"
-abstract: "This is our informative abstract of fewer than 200 words. It describes what we investigate, how we investigate it, and what we find."
+abstract: "This paper investigates differing measures of political polarization among the American public. One measure considers how members of each major political party view the other party as well as their own, and the other is a measure of entropy which takes into account a distribution's shape and how it is ordered. The in-group and out-group definition of polarization results in a larger magnitude of change over the years than the entropy measure does. However, I conclude that this is due to party identification being a fluid identity that people can move between and even not participate in. Therefore, although measuring polarization through feeling thermometers of each political party sounds intuitive, it is missing a certain factor that would make it more reliable."
 output: pdf_document
 number_sections: true
-bibliography: Polarization.bib.bib
+bibliography: polarization.bib
 ---
 
 
 # Introduction
 
-In this section, we introduce the reader to the phenomenon we investigate. We describe the way in which our analysis contributes to an important intellectual debate, or how it answers a pressing political or social question. We introduce our hypotheses, data, and results. We signpost for the reader what's coming in the rest of the paper.
+|       Given the growing partisanship in American politics over the past few decades, polarization has become an important aspect of the United States governmental system. There discourse regarding the causes of such polarization, as well as what it means for the future of American democracy. If polarization strengthens among the public, elections will become more contested and less bills will be passed; this is detrimental to all political parties as well as the citizens. However, much of the conversation about polarization exists in the news media and there is not a consensus about how to measure polarization in a standardized way. Therefore, this paper investigates different ways of measuring polarization and what they might mean in different contexts.
+
+|       The data utilized in this paper include three different sources. The first data set is “Important Congressional Votes, 1991-2020” created by Jordan Tama, collected from the Congressional Quarterly Almanac, defining “important” votes as those appearing in its yearly “Key Votes” report. Each observation describes one piece of "important" legislation, and I will be using the data set to provide crucial context about polarization in Congress, which is where most people form their perceptions of polarization across the country. The second group of data comes from the American National Elections Studies (ANES), combining three data sets of survey results from 1948-2012, 2016, and 2020 to explore party identification and feeling thermometers. Finally, I incorporate the General Social Survey (GSS) by analyzing racial attitudes over time. In exploring the ANES and GSS data, I implement two frames of analysis: trends of party feeling thermometers over time and an entropy measure [@lebao22] of party identification over time. I hypothesize that the two methods will indicate similarity with each other as well as with the polarization within Congress. 
 
 
-# [Our Substance and Context Section Title Here]
+```{r, include=FALSE}
+suppressMessages(library(tidyr))
+suppressMessages(library(dplyr))
+suppressMessages(library(ggplot2))
+suppressMessages(library(tidyverse))
+suppressMessages(library(haven))
+```
 
-Here we go deeper into the intellectual debate, the political and social context of our investigation. To give the reader a clear sense of why we are writing this paper, we describe the relevant scholarly, technical, or popular literature.  We cite at least two published, peer-reviewed scholarly works. For example, we could cite @mooree20 or @moorav12, which we discussed in class.^[To cite a paper within parentheses, use, e.g., [@moore12].] We only cite others' work in our paper when it enhances the reader's understanding of what we, the authors of this paper, are doing.  We connect everything we cite to _our_ investigation; this is our original research, not a book report or an annotated bibliography.
+```{r, include=FALSE}
+votes<- read_dta("Data/Important Congressional Votes, 1991-2010.dta")
+```
 
-In order to integrate citations into the References section below, we add entries into our file `main.bib`. This is a plain-text file that we edit in RStudio. We store `main.bib` in the same folder as our paper's `.Rmd` and `.pdf` files. Its entries are formatted so that they can be knit to `.pdf`; see [https://j.mp/2UzTXEZ](https://www.overleaf.com/learn/latex/Bibliography_management_with_bibtex#The_bibliography_file) for example entries for articles, books, and miscellaneous. We can get these entries automatically from Google Scholar by turning on BibTeX in the Google Scholar Settings - Bibliography Manager.
 
-# Data and Methods
+# Exploring Contextual Data and Literature
+
+|       There is a substantial collection of texts, research papers, and studies in the current literature on political polarization. Some researchers indicate that member replacement drives the increased polarization of American politics [@bonica14], however others argue that presidential partisanship [@baker21] is instead truly behind it. However, I am interested in how we are measuring polarization in the first place, and in what cases should each measure be used. This project intends to advise political scientists to be mindful in how they operationalize polarization. 
+
+|       In order to investigate different measures of polarization, I first wanted to visualize the polarization evident in Congress. Utilizing the data about congressional votes [@tama21], I measured the average strength of bipartisanship for each year. Figure 1 illustrates a clear decline in Congressional bipartisanship over the last few decades. This raises the salient question of if the same is true for United States citizens.
+
+
+```{r, echo=FALSE, fig.width=7, fig.height = 5, out.width = ".7\\textwidth", fig.cap = "Average Congressional Bipartisanship Over Time", fig.align="center", wrapfigure = list("R", .7)}
+drop_na(votes, strengthofbipartisanship)%>%
+  group_by(year)%>%
+  summarize(mean = mean(strengthofbipartisanship))%>%
+  ggplot()+
+  geom_line(aes(x= as.factor(year), y= mean), group= 1)+
+  geom_point(aes(x=as.factor(year), y=mean))+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  xlab("Year")+ ylab("Average Strength of Bipartisanship")
+```
+
+|       Therefore, in an attempt to discover whether this polarization exists among the American people, we must first decide how to operationalize polarization. Some studies use public opinion on relevant political topic areas to measure polarization. Through analysis of General Social Survey data, @baker21 found that presidential partisanship regarding immigration was associated with changes in public opinion on immigration during the 2016 election, which affected voting patterns. Other researchers look at personal party identification, including @west20, who found that identification with one's political party becomes stronger during times of high salience, and becomes weaker when considering individual social identities. Finally, @lebao22 have proposed a new entropy-based measure of polarization, which can describe how polarized a distribution of ordered outcomes is with one number. 
+
+|       In consideration of all of these methods, I intend to analyze their performance and provide a deeper understanding of how each one is useful, as well as a necessary political and psychological context. @iyengar15 assert that political polarization has led to out-group animosity, and that this phenomenon is as prominent as it is between racial groups. Although this claim is strong when looking at distinct groups of people at one time, there is another layer that must be considered when comparing polarization over time; political party identification is a unique self-identity in that it is dynamic, and one can change it at any time. The same is not true for one's race, background, or other similar demographic measures. Thus, my analysis that follows displays the difference in measuring polarization using identities that change over time and those that do not.
+
+# Data and Analysis
 \label{section:data}
 
-This section describes the data we analyze. We describe the source of the data, and its primary features. We describe the methods we use to answer our question and to test our hypotheses.
+|       The ANES data I compiled from 1948 to 2020 has in total 68,225 observations across over 1,000 variables. I am most interested in the variables detailing the respondent's political party identification as well as the respondent's feeling thermometer for the Republican Party and the Democratic Party. The GSS data from 1972-2021 has 68,846 observations across 6,409 variables, and the variables of interest from this dataset are the respondent's race and how much they would approve of living in a neighborhood where half of the residents are of the opposite race. 
 
-If our data were loaded in the chunk above, we could note that our data have  observations.
+```{r, include = FALSE}
+anes<- read_dta("Data/ANES_1948_2012.dta")
+anes16<- read_dta("Data/ANES_2016.dta")
+anes20<-  read_dta("Data/ANES_2020.dta")
+gss<- read_dta("Data/gss7221_r3.dta")
+```
 
-# [Our Results Section Title Here]
+```{r, include=FALSE}
+anes92_12<- anes%>%
+  filter(VCF0004 >= 1972)
+Rftd92_12<- anes92_12%>%
+  filter(is.na(VCF0218)== FALSE)%>%
+  filter(VCF0301 == 5| VCF0301 == 6 | VCF0301 == 7)%>%
+  group_by(VCF0004)%>%
+  summarise(mean = mean(VCF0218))%>%
+  rename("year" =VCF0004)
 
-Here, we explain and interpret our results. We try to learn as much as we can about our question as possible, given the data and analysis. We present our results clearly. We interpret them for the reader with precision and circumspection. We avoid making claims that are not substantiated by our data.
-
-Note that this section may be integrated into Section \ref{section:data}, if joining the two improves the overall presentation.
-
-Our results for the  data include estimating the linear model 
-
-$$\text{Distance}_i = \beta_0 + \beta_1 (\text{Speed}_i) + \epsilon_i.$$
-
-
-
-Below we show the model estimates. The first table uses `xtable()`, the second uses `stargazer()`.
+  
+Dftr92_12<- anes92_12%>%
+  filter(is.na(VCF0224)== FALSE)%>%
+  filter(VCF0301 == 1| VCF0301 == 2 | VCF0301 == 3)%>%
+  group_by(VCF0004)%>%
+  summarise(mean = mean(VCF0224))%>%
+  rename("year" =VCF0004)
 
 
-Using the data, we find that each unit of speed is associated with more units of distance.
+Rftd16<- anes16%>%
+  filter(is.na(V161095)== FALSE)%>%
+  filter(V162279 == 5)%>%
+  summarise(mean = mean(V161095))
+Rftd16$year<- 2016
+
+Dftr16<- anes16%>%
+  filter(is.na(V161096)== FALSE)%>%
+  filter(V162279 == 1)%>%
+  summarise(mean = mean(V161096))
+Dftr16$year<- 2016
+
+
+Rftd20<- anes20%>%
+  filter(is.na(V201156)== FALSE)%>%
+  filter(V202429 == 5)%>%
+  summarise(mean = mean(V201156))
+Rftd20$year<- 2020
+
+Dftr20<- anes20%>%
+  filter(is.na(V201157)== FALSE)%>%
+  filter(V202429 == 1)%>%
+  summarise(mean = mean(V201157))
+Dftr20$year<- 2020
+
+
+RD1620<- rbind(Rftd16, Rftd20)
+
+RthermD<- rbind(Rftd92_12, RD1620)
+RthermD<- RthermD%>%
+  rename(RepFeelingThermDem = mean)
+
+DR1620<- rbind(Dftr16, Dftr20)
+DthermR<- rbind(Dftr92_12, DR1620)
+DthermR<- DthermR%>%
+  rename(DemFeelingThermRep = mean)
+
+
+RR92_12<- anes92_12%>%
+  filter(is.na(VCF0224)== FALSE)%>%
+  filter(VCF0301 == 5| VCF0301 == 6 | VCF0301 == 7)%>%
+  group_by(VCF0004)%>%
+  summarise(mean = mean(VCF0224))%>%
+  rename("year" =VCF0004)
+
+RR16<-anes16%>%
+  filter(is.na(V161096)== FALSE)%>%
+  filter(V162279 == 5)%>%
+  summarise(mean = mean(V161096))
+RR16$year<- 2016
+
+RR20<- anes20%>%
+  filter(is.na(V201157)== FALSE)%>%
+  filter(V202429 == 5)%>%
+  summarise(mean = mean(V201157))
+RR20$year<- 2020
+
+RR1620<- rbind(RR16, RR20)
+
+RthermR<- rbind(RR92_12, RR1620)
+RthermR<- RthermR%>%
+  rename(RepFeelingThermRep = mean)
+
+DD92_12<- anes92_12%>%
+  filter(is.na(VCF0218)== FALSE)%>%
+  filter(VCF0301 == 1| VCF0301 == 2 | VCF0301 == 3)%>%
+  group_by(VCF0004)%>%
+  summarise(mean = mean(VCF0218))%>%
+  rename("year" =VCF0004)
+
+DD16<- anes16%>%
+  filter(is.na(V161095)== FALSE)%>%
+  filter(V162279 == 1)%>%
+  summarise(mean = mean(V161095))
+DD16$year<- 2016
+
+
+DD20<- anes20%>%
+  filter(is.na(V201156)== FALSE)%>%
+  filter(V202429 == 1)%>%
+  summarise(mean = mean(V201156))
+DD20$year<- 2020
+
+DD1620<- rbind(DD16, DD20)
+
+DthermD<- rbind(DD92_12, DD1620)
+DthermD<- DthermD%>%
+  rename(DemFeelingThermDem = mean)
+
+feelingtherm<- cbind(RthermD, DthermR, RthermR, DthermD)[-c(3,5,7)]
+feelingtherm
+```
+
+|       Figure 2 below illustrates how republican citizens feel about the republican party on the red line, and the democratic party on the blue line. This indicates that over the past three decades, republicans have felt worse about the democratic party, with the feeling thermometer dropping about 20 points since 1992 and 30 since 1972. The data is limited to 1972 to 2020 in order to compare later with the work of @lebao22. These findings are fairly similar to the Congressional bipartisanship trend, the graphs decreasing in similar magnitude on their differing scales. The measurement of republicans' feelings towards the republican party are included in order to illustrate that this is not a product of simply lower feelings towards all political parties. 
+
+```{r, echo = FALSE,  fig.width=7, fig.height = 5, out.width = ".7\\textwidth", fig.cap = "Republican Citizens Feeling Thermometer on Both Parties 1992-2020", fig.align="center", wrapfigure = list("R", .7)}
+ggplot(data=feelingtherm)+
+  geom_line(aes(x=year, y=RepFeelingThermDem), color = "blue")+
+  geom_point(aes(x=year, y=RepFeelingThermDem))+
+  geom_line(aes(x=year, y=RepFeelingThermRep), color = "red")+
+  geom_point(aes(x=year, y=RepFeelingThermRep))+
+  ylab("Feeling Thermometer")+ xlab("Year")
+```
+
+|       Figure 3 below illustrates how democrat citizens feel about the republican party on the red line, and the democratic party on the blue line. This similarly indicates that over the past three decades, democrats have felt worse about the republican party, with the feeling thermometer also decreasing by approximately 20 points since 1992 and 30 since 1972. This graph mirrors the previous one, as well as the decline in Congressional bipartisanship as pictured in Figure 1. The measurement of democrats' feelings towards the democratic party also show that this association exists within both out-group view, but not in the in-group views. 
+
+|       Although these findings are robust on their own, are they an accurate measure of polarization? In order to test this, I proceed by comparing the findings of @lebao22 on the same respondents' party identification. This variable is measured on the standard 7-point scale. Using their cumulative entropy measure, @lebao22 discover a slight upward trend in polarization on party identification from 1972 to 2020. Although this concurs with the feeling thermometer findings, the magnitude of their trend is much smaller, the polarization value being about 0.67 in 1972 and increasing only to approximately 0.8 in 2020. This indicates that there is something missing, and that one of the methods is missing a crucial aspect of polarization. 
+
+```{r, echo = FALSE,  fig.width=7, fig.height = 5, out.width = ".7\\textwidth", fig.cap = "Democrat Citizens Feeling Thermometer on Both Parties 1992-2020", fig.align="center", wrapfigure = list("R", .7)}
+ggplot(data=feelingtherm)+
+  geom_line(aes(x=year, y=DemFeelingThermDem), color = "blue")+
+  geom_point(aes(x=year, y=DemFeelingThermDem))+
+  geom_line(aes(x=year, y=DemFeelingThermRep), color = "red")+
+  geom_point(aes(x=year, y=DemFeelingThermRep))+
+  ylab("Feeling Thermometer")+ xlab("Year")
+```
+
+|        Due to this inconsistency, I applied the ideas from @baker21, @west20, and @iyengar15 to the GSS data to investigate a similar case. I hypothesize that party identification is a difficult variable to measure due to its inherent quality of being dynamic, and therefore comparing the feeling thermometer data is not enough. I assert this claim by analyzing the variable measuring one's favorability to living in a neighborhood with more than half of the residents being either white or black using the cumulative entropy measure. If people of different races are highly polarized about their opinions on living in a certain neighborhood, this method will make it evident.
+
+|       In the previous case, although the feeling thermometer data indicated a large disparity in out-group identity perceptions, the cumulative entropy measure indicated a smaller change over the years. Similarly, as seen in Figure 5 and Figure 6, there is only a slight drop in polarization over a racially motivated opinion. Thus, this means that self-identity variables result in smaller changes in polarization than one might expect, since the in-groups and out-groups tend to hold strong no matter what type of identity it is.
+
+|       However, the following question still remains: What does this mean for party identification feeling thermometers? It is puzzling why the change over time seems so large when it is truly not according to other methods. I argue that this is mainly due to the fact that a person's party identity can change quickly and sometimes easily. This means that in our current political climate, the people who had more favorable views of the opposing party may have switched parties entirely, and this is not very easy to measure. Furthermore, those who have very unfavorable views of the opposing party likely remain in their original party identity. The combination of these two easily accessible decisions are potentially what have created an exaggeration of the polarization among the United States public. 
+
+\newpage
+```{r, include=FALSE}
+
+# Entropy functions
+
+# Input: a vector of proportions
+entropy <- function (vec) {
+    p <- vec/sum(vec)
+    a <- log2(p)
+    a[a == -Inf] <- 0
+    e <- -1 * sum(p * a)
+    return(e)
+}
+
+# Input: a vector of proportions
+cumEntropy <- function(vec){
+  l <- length(vec)
+  outEntropy <- 0
+  for (i in 1:(l-1)) {
+    doubleEntropy <- entropy(c(sum(vec[1:i]), sum(vec[(i+1):l])))^2
+    outEntropy <- outEntropy + doubleEntropy
+  }
+  return(outEntropy/(l-1))
+}
+
+blkneighbor<- gss%>%
+  filter(is.na(liveblks)== FALSE)%>%
+  group_by(year)%>%
+  count(liveblks)
+
+whtneighbor<- gss%>%
+  filter(is.na(livewhts)== FALSE)%>%
+  group_by(year)%>%
+  count(livewhts)
+  
+
+
+Ecgss<- vector()
+for (i in 1:14){
+  
+  yr<- unique(blkneighbor$year)[i]
+  
+  df<- blkneighbor%>%
+    filter(year== yr)
+  
+  Ecgss[i]<- cumEntropy(df$n)
+}
+
+
+
+Ecgss2<- vector()
+for (i in 1:9){
+  
+  yr<- unique(whtneighbor$year)[i]
+  
+  df<- whtneighbor%>%
+    filter(year== yr)
+  
+  Ecgss2[i]<- cumEntropy(df$n)
+}
+
+
+
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.width=7, fig.height = 5, out.width = ".7\\textwidth", fig.cap = "Cumulative Entropy Polarization for Black Neighborhood 1990-2021", fig.align="center", wrapfigure = list("R", .7)}
+
+ggplot()+
+  geom_line(aes(x = unique(blkneighbor$year), y= Ecgss))+
+  geom_point(aes(x = unique(blkneighbor$year), y= Ecgss))+
+  ylim(0.1, 0.5)+
+  xlab("Year")+ ylab("Cumulative Entropy")+
+  scale_x_continuous()
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.width=7, fig.height = 5, out.width = ".7\\textwidth", fig.cap = "Cumulative Entropy Polarization for White Neighborhood 2000-2016", fig.align="center", wrapfigure = list("R", .7)}
+ggplot()+
+  geom_line(aes(x = unique(whtneighbor$year), y= Ecgss2))+
+  geom_point(aes(x = unique(whtneighbor$year), y= Ecgss2))+
+  ylim(0.1, 0.5)+
+  xlab("Year")+ ylab("Cumulative Entropy")+
+  scale_x_continuous()
+
+```
+
+
 
 # Discussion
 
-We remind the reader what this paper was about, why it was important, and what we found. We reflect on limitations of the data or methods. If we have specific advice for someone picking up where we leave off, we provide that guidance. We avoid making trite statements like "more research should be done".
+|       When measuring political polarization, it is imperative to first understand exactly what one wants to know. Political party identification is an important aspect of political research, however it is not the most reliable measure of polarization. As shown above, party identification measured in slightly different ways can result in very diverse conclusions. This is because party identity is a dynamic identity, and can be changed when one wants to. The likelihood that the changing definitions and platforms of the parties themselves resulted in many people switching parties or even disaffiliating from any party is high. 
 
+|       The cumulative entropy measure of political polarization has a closer grounding to political science methods than party identification and feeling thermometers do, since the latter is more rooted in human psychology of in-groups and out-groups. Cumulative entropy measures the density of people across the spectrum of party identification, while feeling thermometer only captures one dimension of polarization. Thus, this paper finds that cumulative entropy is a more reliable form of political polarization analysis, and that it is best used with a focused goal in mind. 
+
+|       Some of the limitations in this analysis are that the data do not all include observations for the same years, and that they are not all measuring the same people. Additionally, it is difficult to compare the accuracy of two measures of a concept because there is no record of the correct measure. However, I have been thorough in utilizing relevant data and comparisons when possible. I would advise for the future that polarization research be as specific as possible in order to avoid one-dimensional methods of analysis. 
+
+\newpage
 # References 
